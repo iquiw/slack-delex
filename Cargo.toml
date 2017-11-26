@@ -1,0 +1,8 @@
+[package]
+authors = ["Iku Iwasa <iku.iwasa@gmail.com>"]
+name = "slack-delex"
+version = "0.1.0"
+
+[dependencies]
+dotenv = "0.10.1"
+slack_api = "0.19.0"
