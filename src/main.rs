@@ -1,4 +1,5 @@
 extern crate dotenv;
+extern crate serde_json;
 extern crate slack_api;
 
 use std::env;
@@ -9,6 +10,8 @@ use slack_api::requests::{Client, Error};
 use slack_api::channels::ListError;
 use slack_api::chat::{DeleteError, DeleteRequest};
 
+mod json;
+
 fn main() {
     dotenv().ok();
 
@@ -16,20 +19,26 @@ fn main() {
     let arg1 = args.nth(1);
     let arg2 = args.next();
     if arg1.is_none() || arg2.is_none() {
-        eprintln!("usage: slack-delex CHANNEL_NAME TS");
+        eprintln!("usage: slack-delex CHANNEL_NAME JSON_FILE");
         exit(1);
     }
     let channel_name = arg1.unwrap();
-    let ts = arg2.unwrap();
+    let json_file = arg2.unwrap();
 
     let token = env::var("SLACK_API_TOKEN").expect("SLACK_API_TOKEN is not set.");
     let client = slack_api::requests::default_client().unwrap();
 
     match find_channel_id(&client, &token, &channel_name) {
         Ok(channel_id) => {
-            match delete_message(&client, &token, &channel_id, &ts) {
-                Ok(_) => println!("Message deleted: {}", ts),
-                Err(err) => eprintln!("Message delete failed: {}", err),
+            println!("Channel: {}", channel_id);
+            let msgs = json::read_json(json_file).unwrap();
+            for msg in msgs {
+                if let Some(ts) = json::msg_ts(&msg) {
+                    match delete_message(&client, &token, &channel_id, &ts) {
+                        Ok(_) => println!("Message deleted: {}", ts),
+                        Err(err) => eprintln!("Message delete failed: {}", err),
+                    }
+                }
             }
         },
         Err(err) => eprintln!("Channel list failed: {}", err),
