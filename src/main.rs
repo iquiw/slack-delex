@@ -1,10 +1,11 @@
+extern crate clap;
 extern crate dotenv;
 extern crate serde_json;
 extern crate slack_api;
 
 use std::env;
-use std::process::exit;
 
+use clap::{Arg, App};
 use dotenv::dotenv;
 use slack_api::requests::{Client, Error};
 use slack_api::channels::ListError;
@@ -15,15 +16,21 @@ mod json;
 fn main() {
     dotenv().ok();
 
-    let mut args = env::args();
-    let arg1 = args.nth(1);
-    let arg2 = args.next();
-    if arg1.is_none() || arg2.is_none() {
-        eprintln!("usage: slack-delex CHANNEL_NAME JSON_FILE");
-        exit(1);
-    }
-    let channel_name = arg1.unwrap();
-    let json_file = arg2.unwrap();
+    let matches = App::new("slack-delex")
+        .arg(Arg::with_name("channel-name")
+             .short("n")
+             .long("channel-name")
+             .value_name("CHANNEL_NAME")
+             .help("Specify channel name")
+             .required(true)
+             .takes_value(true))
+        .arg(Arg::with_name("JSON_FILE")
+             .help("Specify JSON file exported from Slack")
+             .required(true)
+             .index(1))
+        .get_matches();
+    let channel_name = matches.value_of("channel-name").unwrap();
+    let json_file = matches.value_of("JSON_FILE").unwrap();
 
     let token = env::var("SLACK_API_TOKEN").expect("SLACK_API_TOKEN is not set.");
     let client = slack_api::requests::default_client().unwrap();
