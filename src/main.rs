@@ -18,18 +18,22 @@ fn main() {
 
     let matches = App::new("slack-delex")
         .arg(Arg::with_name("channel-name")
-             .short("n")
+             .short("c")
              .long("channel-name")
              .value_name("CHANNEL_NAME")
              .help("Specify channel name")
              .required(true)
              .takes_value(true))
+        .arg(Arg::with_name("dry-run")
+             .short("n")
+             .long("dry-run"))
         .arg(Arg::with_name("JSON_FILE")
              .help("Specify JSON file exported from Slack")
              .required(true)
              .index(1))
         .get_matches();
     let channel_name = matches.value_of("channel-name").unwrap();
+    let dry_run = matches.is_present("dry-run");
     let json_file = matches.value_of("JSON_FILE").unwrap();
 
     let token = env::var("SLACK_API_TOKEN").expect("SLACK_API_TOKEN is not set.");
@@ -41,9 +45,13 @@ fn main() {
             let msgs = json::read_json(json_file).unwrap();
             for msg in msgs {
                 if let Some(ts) = json::msg_ts(&msg) {
-                    match delete_message(&client, &token, &channel_id, &ts) {
-                        Ok(_) => println!("Message deleted: {}", ts),
-                        Err(err) => eprintln!("Message delete failed: {}", err),
+                    if dry_run {
+                        println!("Would delete: {}", ts);
+                    } else {
+                        match delete_message(&client, &token, &channel_id, &ts) {
+                            Ok(_) => println!("Message deleted: {}", ts),
+                            Err(err) => eprintln!("Message delete failed: {}", err),
+                        }
                     }
                 }
             }
