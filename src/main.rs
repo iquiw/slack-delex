@@ -1,6 +1,9 @@
 extern crate clap;
 extern crate dotenv;
+extern crate serde;
 extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 extern crate slack_api;
 
 use std::env;
@@ -44,14 +47,13 @@ fn main() {
             println!("Channel: {}", channel_id);
             let msgs = json::read_json(json_file).unwrap();
             for msg in msgs {
-                if let Some(ts) = json::msg_ts(&msg) {
-                    if dry_run {
-                        println!("Would delete: {}", ts);
-                    } else {
-                        match delete_message(&client, &token, &channel_id, &ts) {
-                            Ok(_) => println!("Message deleted: {}", ts),
-                            Err(err) => eprintln!("Message delete failed: {}", err),
-                        }
+                let ts = msg.ts();
+                if dry_run {
+                    println!("Would delete: {}", ts);
+                } else {
+                    match delete_message(&client, &token, &channel_id, &ts) {
+                        Ok(_) => println!("Message deleted: {}", ts),
+                        Err(err) => eprintln!("Message delete failed: {}", err),
                     }
                 }
             }
