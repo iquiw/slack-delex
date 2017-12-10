@@ -51,7 +51,7 @@ fn main() {
                 if dry_run {
                     println!("Would delete: {}", ts);
                 } else {
-                    match delete_message(&client, &token, &channel_id, &ts) {
+                    match delete_message(&client, &token, &channel_id, ts) {
                         Ok(_) => println!("Message deleted: {}", ts),
                         Err(err) => eprintln!("Message delete failed: {}", err),
                     }

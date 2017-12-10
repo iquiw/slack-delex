@@ -13,8 +13,8 @@ pub struct Msg {
 }
 
 impl Msg {
-    pub fn ts(self) -> String {
-        self.ts
+    pub fn ts(&self) -> &str {
+        &self.ts
     }
 }
 
