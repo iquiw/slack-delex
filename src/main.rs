@@ -7,6 +7,8 @@ extern crate serde_derive;
 extern crate slack_api;
 
 use std::env;
+use std::time;
+use std::thread;
 
 use clap::{Arg, App};
 use dotenv::dotenv;
@@ -37,6 +39,7 @@ fn main() {
         .get_matches();
     let channel_name = matches.value_of("channel-name").unwrap();
     let dry_run = matches.is_present("dry-run");
+    let delay = time::Duration::from_millis(300);
     let json_file = matches.value_of("JSON_FILE").unwrap();
 
     let token = env::var("SLACK_API_TOKEN").expect("SLACK_API_TOKEN is not set.");
@@ -55,6 +58,7 @@ fn main() {
                         Ok(_) => println!("Message deleted: {}", ts),
                         Err(err) => eprintln!("Message delete failed: {}", err),
                     }
+                    thread::sleep(delay);
                 }
             }
         },
