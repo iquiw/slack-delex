@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate clap;
 extern crate dotenv;
 extern crate serde;
@@ -32,6 +33,13 @@ fn main() {
         .arg(Arg::with_name("dry-run")
              .short("n")
              .long("dry-run"))
+        .arg(Arg::with_name("delay")
+             .short("d")
+             .long("delay")
+             .value_name("DELAY")
+             .help("Specify delay (ms) after one deletion")
+             .default_value("300")
+             .takes_value(true))
         .arg(Arg::with_name("JSON_FILE")
              .help("Specify JSON file exported from Slack")
              .required(true)
@@ -39,7 +47,7 @@ fn main() {
         .get_matches();
     let channel_name = matches.value_of("channel-name").unwrap();
     let dry_run = matches.is_present("dry-run");
-    let delay = time::Duration::from_millis(300);
+    let delay = time::Duration::from_millis(value_t_or_exit!(matches, "delay", u64));
     let json_file = matches.value_of("JSON_FILE").unwrap();
 
     let token = env::var("SLACK_API_TOKEN").expect("SLACK_API_TOKEN is not set.");
