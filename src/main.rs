@@ -63,9 +63,9 @@ fn main() {
                 let ts = msg.ts();
                 match client.delete_message(&channel_id, ts) {
                     Ok(_) => if dry_run {
-                        println!("Would delete: {}", ts);
+                        println!("Would delete: {}", msg);
                     } else {
-                        println!("Message deleted: {}", ts);
+                        println!("Message deleted: {}", msg);
                     },
                     Err(err) => eprintln!("Message delete failed: {}", err),
                 }

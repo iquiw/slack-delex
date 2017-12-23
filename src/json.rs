@@ -1,7 +1,7 @@
-use std::io::Error;
+use std::fmt;
 use std::fs::File;
+use std::io::{Error, Read};
 use std::path::Path;
-use std::io::Read;
 
 use serde_json;
 
@@ -15,6 +15,13 @@ pub struct Msg {
 impl Msg {
     pub fn ts(&self) -> &str {
         &self.ts
+    }
+}
+
+impl fmt::Display for Msg {
+    fn fmt(&self, f: &mut fmt::Formatter) ->  fmt::Result {
+        let s = self.text.replace("\n", "\\n");
+        write!(f, "{} {:.70}", &self.ts, &s)
     }
 }
 
