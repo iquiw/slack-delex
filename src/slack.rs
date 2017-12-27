@@ -6,7 +6,9 @@ use slack_api::chat::{DeleteError, DeleteRequest};
 pub trait DelexClient {
     fn find_channel_id(&self, name: &str) -> Result<String, ListError<Error>>;
     fn delete_message(&self, channel_id: &str, ts: &str) -> Result<(), DeleteError<Error>>;
+    fn is_dry_run(&self) -> bool { false }
 }
+
 
 pub struct SlackDelexClient {
     client: Client,
@@ -64,4 +66,6 @@ impl DelexClient for DryRunClient {
     fn delete_message(&self, _channel_id: &str, _ts: &str) -> Result<(), DeleteError<Error>> {
         Ok(())
     }
+
+    fn is_dry_run(&self) -> bool { true }
 }

@@ -40,13 +40,14 @@ fn main() {
              .takes_value(true))
         .arg(Arg::with_name("JSON_FILE")
              .help("Specify JSON file exported from Slack")
+             .multiple(true)
              .required(true)
              .index(1))
         .get_matches();
     let channel_name = matches.value_of("channel-name").unwrap();
     let dry_run = matches.is_present("dry-run");
     let delay = time::Duration::from_millis(value_t_or_exit!(matches, "delay", u64));
-    let json_file = matches.value_of("JSON_FILE").unwrap();
+    let json_files = matches.values_of("JSON_FILE").unwrap();
 
     let client: Box<slack::DelexClient> = if dry_run {
         Box::new(slack::DryRunClient::new())
@@ -58,20 +59,27 @@ fn main() {
     match client.find_channel_id(&channel_name) {
         Ok(channel_id) => {
             println!("Channel: {}", channel_id);
-            let msgs = json::read_json(json_file).unwrap();
-            for msg in msgs {
-                let ts = msg.ts();
-                match client.delete_message(&channel_id, ts) {
-                    Ok(_) => if dry_run {
-                        println!("Would delete: {}", msg);
-                    } else {
-                        println!("Message deleted: {}", msg);
-                    },
-                    Err(err) => eprintln!("Message delete failed: {}", err),
-                }
-                thread::sleep(delay);
+            for json_file in json_files {
+                println!("Processing: {}", &json_file);
+                delete_message(&client, &channel_id, &json_file, delay);
             }
         },
         Err(err) => eprintln!("Channel list failed: {}", err),
+    }
+}
+
+fn delete_message<C: AsRef<slack::DelexClient>>(client: C, channel_id: &str, json_file: &str, delay: time::Duration) {
+    let msgs = json::read_json(json_file).unwrap();
+    for msg in msgs {
+        let ts = msg.ts();
+        match client.as_ref().delete_message(&channel_id, ts) {
+            Ok(_) => if client.as_ref().is_dry_run() {
+                println!("Would delete: {}", msg);
+            } else {
+                println!("Message deleted: {}", msg);
+            },
+            Err(err) => eprintln!("Message delete failed: {}", err),
+        }
+        thread::sleep(delay);
     }
 }
