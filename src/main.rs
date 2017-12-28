@@ -36,7 +36,7 @@ fn main() {
              .long("delay")
              .value_name("DELAY")
              .help("Specify delay (ms) after one deletion")
-             .default_value("300")
+             .default_value("900")
              .takes_value(true))
         .arg(Arg::with_name("JSON_FILE")
              .help("Specify JSON file exported from Slack")
