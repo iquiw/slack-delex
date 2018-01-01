@@ -21,7 +21,10 @@ impl Msg {
 impl fmt::Display for Msg {
     fn fmt(&self, f: &mut fmt::Formatter) ->  fmt::Result {
         let s = self.text.replace("\n", "\\n");
-        write!(f, "{} {:.70}", &self.ts, &s)
+         match &self.subtype {
+            &Some(ref st) => write!(f, "{} [{}] {:.70}", &self.ts, &st, &s),
+            &None         => write!(f, "{} {:.70}", &self.ts, &s),
+         }
     }
 }
 
