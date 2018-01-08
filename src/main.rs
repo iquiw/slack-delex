@@ -11,45 +11,18 @@ use std::env;
 use std::time;
 use std::thread;
 
-use clap::{Arg, App};
 use dotenv::dotenv;
 
+mod cli;
 mod json;
 mod slack;
 
 fn main() {
     dotenv().ok();
 
-    let matches = App::new("slack-delex")
-        .arg(Arg::with_name("channel-name")
-             .short("c")
-             .long("channel-name")
-             .value_name("CHANNEL_NAME")
-             .help("Specify channel name")
-             .required(true)
-             .takes_value(true))
-        .arg(Arg::with_name("dry-run")
-             .short("n")
-             .long("dry-run"))
-        .arg(Arg::with_name("delay")
-             .short("d")
-             .long("delay")
-             .value_name("DELAY")
-             .help("Specify delay (ms) after one deletion")
-             .default_value("900")
-             .takes_value(true))
-        .arg(Arg::with_name("JSON_FILE")
-             .help("Specify JSON file exported from Slack")
-             .multiple(true)
-             .required(true)
-             .index(1))
-        .get_matches();
-    let channel_name = matches.value_of("channel-name").unwrap();
-    let dry_run = matches.is_present("dry-run");
-    let delay = time::Duration::from_millis(value_t_or_exit!(matches, "delay", u64));
-    let json_files = matches.values_of("JSON_FILE").unwrap();
+    let opts = cli::DelexOpts::parse_opts();
 
-    let client: Box<slack::DelexClient> = if dry_run {
+    let client: Box<slack::DelexClient> = if opts.dry_run {
         Box::new(slack::DryRunClient::new())
     } else {
         let token = env::var("SLACK_API_TOKEN").expect("SLACK_API_TOKEN is not set.");
@@ -57,12 +30,12 @@ fn main() {
     };
 
     let mut total = 0;
-    match client.find_channel_id(&channel_name) {
+    match client.find_channel_id(&opts.channel_name) {
         Ok(channel_id) => {
             println!("Channel: {}", channel_id);
-            for json_file in json_files {
+            for json_file in &opts.json_files {
                 println!("Processing: {}", &json_file);
-                total += delete_message(&client, &channel_id, &json_file, delay);
+                total += delete_message(&client, &channel_id, &json_file, opts.delay);
             }
         },
         Err(err) => eprintln!("Channel list failed: {}", err),
