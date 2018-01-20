@@ -6,6 +6,7 @@ pub struct DelexOpts {
     pub channel_name: String,
     pub delay: time::Duration,
     pub dry_run: bool,
+    pub subtype: Option<String>,
     pub json_files: Vec<String>,
 }
 
@@ -19,16 +20,20 @@ impl DelexOpts {
                  .help("Specify channel name")
                  .required(true)
                  .takes_value(true))
-            .arg(Arg::with_name("dry-run")
-                 .short("n")
-                 .long("dry-run")
-                 .help("Not actually deletes messages (dry-run)"))
             .arg(Arg::with_name("delay")
                  .short("d")
                  .long("delay")
                  .value_name("DELAY")
                  .help("Specify delay (ms) after one deletion")
                  .default_value("900")
+                 .takes_value(true))
+            .arg(Arg::with_name("dry-run")
+                 .short("n")
+                 .long("dry-run")
+                 .help("Not actually deletes messages (dry-run)"))
+            .arg(Arg::with_name("subtype")
+                 .long("subtype")
+                 .help("Specify subtype to be deleted")
                  .takes_value(true))
             .arg(Arg::with_name("JSON_FILE")
                  .help("Specify JSON file exported from Slack")
@@ -38,14 +43,16 @@ impl DelexOpts {
             .get_matches();
 
         let channel_name = matches.value_of("channel-name").unwrap();
-        let dry_run = matches.is_present("dry-run");
         let delay = time::Duration::from_millis(value_t_or_exit!(matches, "delay", u64));
+        let dry_run = matches.is_present("dry-run");
+        let subtype = matches.value_of("subtype").map(|s| s.to_string());
         let json_files = matches.values_of("JSON_FILE").unwrap().map(|s| s.to_string()).collect();
 
         DelexOpts {
             channel_name: channel_name.to_string(),
             delay: delay,
             dry_run: dry_run,
+            subtype: subtype,
             json_files: json_files,
         }
     }

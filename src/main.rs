@@ -33,9 +33,10 @@ fn main() {
     match client.find_channel_id(&opts.channel_name) {
         Ok(channel_id) => {
             println!("Channel: {}", channel_id);
+            let filter = opts.subtype.map(|st| json::SubtypeFilter::new(&st));
             for json_file in &opts.json_files {
                 println!("Processing: {}", &json_file);
-                total += delete_message(&client, &channel_id, &json_file, opts.delay);
+                total += delete_message(&client, &channel_id, &json_file, opts.delay, &filter);
             }
         },
         Err(err) => eprintln!("Channel list failed: {}", err),
@@ -43,11 +44,15 @@ fn main() {
     println!("Total deleted: {}", total);
 }
 
-fn delete_message<C: AsRef<slack::DelexClient>>(client: C, channel_id: &str, json_file: &str, delay: time::Duration) -> u32 {
+fn delete_message<C>(client: C, channel_id: &str, json_file: &str, delay: time::Duration, filter: &json::MsgFilter) -> u32
+    where C: AsRef<slack::DelexClient> {
     let mut count = 0;
     let msgs = json::read_json(json_file).unwrap();
     for msg in msgs {
         let ts = msg.ts();
+        if !filter.filter(&msg) {
+            continue;
+        }
         match client.as_ref().delete_message(&channel_id, ts) {
             Ok(_) => {
                 if client.as_ref().is_dry_run() {
