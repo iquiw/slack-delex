@@ -44,7 +44,7 @@ impl<F: MsgFilter> MsgFilter for Option<F> {
     fn filter(&self, msg: &Msg) -> bool {
         match self {
             &Some(ref f) => f.filter(msg),
-            &None        => false
+            &None        => true
         }
     }
 }
