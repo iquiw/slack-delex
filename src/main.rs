@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate clap;
 extern crate dotenv;
+extern crate failure;
 extern crate serde;
 extern crate serde_json;
 #[macro_use]
