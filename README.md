@@ -20,3 +20,10 @@ $ cargo install --git https://github.com/iquiw/slack-delex
    $ slack-delex -c general general/2017-*.json
    ```
 
+### Options
+
+- `-n`, `--dry-run`: Not actually deletes messages (dry-run)
+
+- `-c`, `--channel-name <CHANNEL_NAME>`: Specify channel name
+- `-d`, `--delay <DELAY>`: Specify delay (ms) after one deletion (default: 900)
+- `--subtype <subtype>`: Specify subtype to be deleted
